@@ -1,5 +1,5 @@
 # Pycharm specific folders
-.ideas/
+.idea/
 
 # Pytest related files and folders
 .pytest_cache/
