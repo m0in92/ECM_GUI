@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Welcome to ECM_GUI’s documentation! &#8212; ECM_GUI 0.1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=4f649999" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=039e1c02" />
+    <script src="_static/documentation_options.js?v=01f34227"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="welcome-to-ecm-gui-s-documentation">
+<h1>Welcome to ECM_GUI’s documentation!<a class="headerlink" href="#welcome-to-ecm-gui-s-documentation" title="Link to this heading">¶</a></h1>
+<section id="copyright-2023-by-moin-ahmed-all-rights-reserved">
+<h2>Copyright© 2023 by Moin Ahmed. All rights reserved.<a class="headerlink" href="#copyright-2023-by-moin-ahmed-all-rights-reserved" title="Link to this heading">¶</a></h2>
+<p>This Python package is the lithium-ion simulator using the equivalent-circuit
+model.</p>
+<section id="installation-and-setup">
+<h3>Installation and Setup<a class="headerlink" href="#installation-and-setup" title="Link to this heading">¶</a></h3>
+<p>The following repository can be installed by cloning it or downloading the tar.gz file in the dist directory.</p>
+<p>Use the following repository link when cloning the GitHub repository:
+<a class="reference external" href="git&#64;github.com:m0in92/ECM_GUI.git">link</a>. Furthermore, the project python library
+dependencies, numpy and matplotlib, should be installed in your project.</p>
+<p>When using the tar.gz file, first extract the contents from the file. Then, <code class="docutils literal notranslate"><span class="pre">cd</span></code> into the extracted content’s root
+file path (where the setup.py file resides) and run the following into the command line:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
+</pre></div>
+</div>
+</section>
+<section id="example-usage">
+<h3>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">¶</a></h3>
+<p>The simulation involves first defining the parameters of the battery cell and creating a BatteryCell instance using
+the defined parameters as such:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">param</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">ParameterSet</span><span class="p">(</span><span class="n">R0</span><span class="o">=</span><span class="n">R0</span><span class="p">,</span> <span class="n">R1</span><span class="o">=</span><span class="n">R1</span><span class="p">,</span> <span class="n">C1</span><span class="o">=</span><span class="n">C1</span><span class="p">,</span> <span class="n">Q</span><span class="o">=</span><span class="n">Q</span><span class="p">,</span> <span class="n">func_SOC_OCV</span><span class="o">=</span><span class="n">func_SOC_OCV</span><span class="p">,</span> <span class="n">func_eta</span><span class="o">=</span><span class="n">func_eta</span><span class="p">)</span>
+<span class="n">b_cell</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">BatteryCell</span><span class="p">(</span><span class="n">param</span><span class="o">=</span><span class="n">param</span><span class="p">,</span> <span class="n">soc_init</span><span class="o">=</span><span class="n">soc_init</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Next, the <code class="docutils literal notranslate"><span class="pre">cycler</span></code> instance is defined which dictates the cycling protocol. In the following the <code class="docutils literal notranslate"><span class="pre">DischargeCycler</span></code>
+object is used that performs one discharge cycling step:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cycler_instance</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">DischargeCycler</span><span class="p">(</span><span class="n">discharge_current</span><span class="o">=</span><span class="n">discharge_current</span><span class="p">,</span> <span class="n">V_min</span><span class="o">=</span><span class="n">V_min</span><span class="p">,</span>
+                                      <span class="n">SOC_LIB_min</span><span class="o">=</span><span class="n">SOC_LIB_min</span><span class="p">,</span> <span class="n">SOC_LIB</span><span class="o">=</span><span class="n">SOC_LIB</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This is followed by the simulation and visualization. First, the solver object is defined and then its <code class="docutils literal notranslate"><span class="pre">solver</span></code> method
+is used, as illustrated below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">DTSolver</span><span class="p">(</span><span class="n">battery_cell_instance</span><span class="o">=</span><span class="n">b_cell</span><span class="p">)</span>
+<span class="n">sol</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">cycler_instance</span><span class="o">=</span><span class="n">cycler_instance</span><span class="p">,</span> <span class="n">dt</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">solve</span></code> method creates a <code class="docutils literal notranslate"><span class="pre">Solution</span></code> object. It’s plot <cite>comprehensive_plot</cite> method can be used to generate a visual
+plot of the simulation results.</p>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">¶</a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">ECM_GUI</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2023, Moin Ahmed.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 7.2.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.13</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
