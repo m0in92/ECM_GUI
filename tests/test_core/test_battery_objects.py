@@ -1,6 +1,10 @@
+"""
+Contains the unittest for the classes in the battery_objects module
+"""
+
 import unittest
 
-from src.core.battery_objects import ParameterSet, BatteryCell
+from src.core.battery_objects import ParameterSet, BatteryCell, DischargeCycler
 
 
 R0 = 0.02
@@ -13,13 +17,6 @@ def func_SOC_OCV(soc):
 
 
 class TestParameterSets(unittest.TestCase):
-    # R0 = 0.02
-    # R1 = 0.05
-    # C1 = 0.003
-
-    # def func_SOC_OCV(self, soc):
-    #     return 0.7 * soc - 4.2
-
     def test_constructor(self):
         param = ParameterSet(R0=R0, R1=R1, C1=C1, func_SOC_OCV=func_SOC_OCV)
         self.assertEqual(R0, param.R0)
@@ -56,6 +53,22 @@ class TestBatteryCell(unittest.TestCase):
     def test_constructor2(self):
         with self.assertRaises(TypeError):
             BatteryCell(param=self.param, soc_init=None)
+
+
+class TestDischargeCycler(unittest.TestCase):
+    discharge_current = 1.656
+    V_min = 2.5
+    SOC_LIB = 1.0
+    SOC_LIB_min = 0.0
+
+    def test_constructor(self):
+        cycler_instance = DischargeCycler(discharge_current=self.discharge_current,
+                                          V_min=self.V_min,
+                                          SOC_LIB_min=self.SOC_LIB_min, SOC_LIB=self.SOC_LIB)
+        self.assertEqual(0.0, cycler_instance.time_elapsed)
+        self.assertEqual(-self.discharge_current, cycler_instance.discharge_current)
+        self.assertEqual(self.SOC_LIB, cycler_instance.SOC_LIB)
+        self.assertEqual(self.SOC_LIB_min, cycler_instance.SOC_LIB_min)
 
 
 

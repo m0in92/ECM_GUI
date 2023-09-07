@@ -6,7 +6,7 @@ Provides classes and functionality for the core objects used by the equivalent c
 # Create an "__all__" list to support #
 #######################################
 
-__all__ = ['ParameterSet', 'BatteryCell']
+__all__ = ['ParameterSet', 'BatteryCell', 'DischargeCycler']
 
 #######################################
 # Module metadata/dunder-names        #
@@ -14,13 +14,15 @@ __all__ = ['ParameterSet', 'BatteryCell']
 
 __author__ = 'Moin Ahmed'
 __copyright__ = 'Copyright 2023 by Moin Ahmed. All rights reserved.'
-__status__ = 'developement'
+__status__ = 'deployed'
 
 #######################################
 # Standard library imports needed     #
 #######################################
 
 from typing import Optional, Callable
+import abc
+from dataclasses import dataclass, field
 
 #######################################
 # Third-party imports needed          #
@@ -70,6 +72,50 @@ def check_for_callable_type(func: Optional[Callable]) -> None:
 #######################################
 # Abstract classes                    #
 #######################################
+
+
+@dataclass
+class BaseCycler(metaclass=abc.ABCMeta):
+    """
+    Abstract parent class for various battery cell cycling protocols.
+    """
+    time_elapsed: float = field(default=0.0)
+    SOC_LIB: float = field(default=1.0)
+    SOC_LIB_min: float = field(default=0.0)
+    SOC_LIB_max: float = field(default=1.0)
+    charge_current: Optional[float] = field(default=None)
+    discharge_current: Optional[float] = field(default=None)
+    rest_time: Optional[float] = field(default=None)
+    num_cycle: Optional[int] = field(default=0)
+    V_max: Optional[float] = field(default=None)
+    V_min: Optional[float] = field(default=None)
+    cycle_steps: list = field(default_factory=lambda: [])
+
+    @abc.abstractmethod
+    def get_current(self, step_name: str, t: float) -> float:
+        """
+        Returns the current for a particular cycling step. It is only valid for constant current situations.
+        :param step_name: (string) The cycling step name.
+        :param t: (float) the time value at the current time step [s]
+        :return: (double) The current value.
+        """
+        if step_name == "rest":
+            return 0.0
+        elif step_name == "charge":
+            return self.charge_current
+        elif step_name == "discharge":
+            return self.discharge_current
+        else:
+            raise TypeError("Not a valid step name")
+
+    @abc.abstractmethod
+    def reset(self) -> None:
+        """
+        Resets the cycler instance
+        :return: None
+        """
+        pass
+
 
 #######################################
 # Concrete classes                    #
@@ -276,8 +322,26 @@ class BatteryCell:
         self.soc_init = soc_init
 
 
+class DischargeCycler(BaseCycler):
+    """
+    Battery Cycler with the discharge step only
+    """
+    def __init__(self, discharge_current: float, V_min: float, SOC_LIB_min: float, SOC_LIB: float) -> None:
+        super().__init__(discharge_current=-discharge_current, V_min=V_min, SOC_LIB_min=SOC_LIB_min,
+                         SOC_LIB=SOC_LIB)
+        self.num_cycle = 1
+        self.cycle_steps = ['discharge']
+        self.SOC_LIB_init = SOC_LIB
 
+    def get_current(self, step_name: str, t: float):
+        if step_name == 'discharge':
+            return self.discharge_current
+        else:
+            return 0.0
 
+    def reset(self) -> None:
+        self.time_elapsed = 0.0
+        self.SOC_LIB = self.SOC_LIB_init
 
 
 #######################################
