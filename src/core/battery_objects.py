@@ -6,7 +6,7 @@ Provides classes and functionality for the core objects used by the equivalent c
 # Create an "__all__" list to support #
 #######################################
 
-__all__ = ['ParameterSet', 'BatteryCell', 'DischargeCycler']
+__all__ = ['BaseCycler', 'ParameterSet', 'BatteryCell', 'DischargeCycler']
 
 #######################################
 # Module metadata/dunder-names        #
@@ -131,7 +131,9 @@ class ParameterSet:
     _R0 = None
     _R1 = None
     _C1 = None
+    _Q = None
     _func_SOC_OCV = None
+    _func_eta = None
 
     ###################################
     # Property-getter methods         #
@@ -146,8 +148,14 @@ class ParameterSet:
     def _get_C1(self) -> Optional[float]:
         return self._C1
 
+    def _get_cap(self) -> Optional[float]:
+        return self._Q
+
     def _get_func_SOC_OCV(self) -> Optional[Callable]:
         return self._func_SOC_OCV
+
+    def _get_func_eta(self) -> Optional[Callable]:
+        return self._func_eta
 
     ###################################
     # Property-setter methods         #
@@ -180,9 +188,21 @@ class ParameterSet:
         check_for_float_type(value=C1)
         self._C1 = C1
 
-    def _set_func_SOC_OCV(self, func_SOC_OCV) -> None:
+    def _set_Q(self, cap: float) -> None:
+        """
+        Sets the battery cell capacity [A hr]
+        :param cap: the battery cell capacity [A hr]
+        """
+        check_for_float_type(value=cap)
+        self._Q = cap
+
+    def _set_func_SOC_OCV(self, func_SOC_OCV: Callable) -> None:
         check_for_callable_type(func_SOC_OCV)
         self._func_SOC_OCV = func_SOC_OCV
+
+    def _set_func_eta(self, func_eta: Callable) -> None:
+        check_for_callable_type(func_eta)
+        self._func_eta = func_eta
 
     ###################################
     # Property-deleter methods        #
@@ -197,8 +217,14 @@ class ParameterSet:
     def _del_C1(self) -> None:
         self._C1 = None
 
+    def _del_cap(self) -> None:
+        self._Q = None
+
     def _del_func_SOC_OCV(self) -> None:
         self._func_SOC_OCV = None
+
+    def _del_func_eta(self) -> None:
+        self._func_eta = None
 
     ###################################
     # Instance property definitions   #
@@ -207,18 +233,23 @@ class ParameterSet:
     R0 = property(_get_R0, _set_R0, _del_R0, 'gets, sets, or deletes the R0.')
     R1 = property(_get_R1, _set_R1, _del_R1, 'gets, sets, or deletes the R1.')
     C1 = property(_get_C1, _set_C1, _del_C1, 'gets, sets, or deletes the C1.')
+    Q = property(_get_cap, _set_Q, _del_cap, 'gets, sets, or deletes the battery cell capacity.')
     func_SOC_OCV = property(_get_func_SOC_OCV, _set_func_SOC_OCV, _del_func_SOC_OCV,
                             'gets, sets, or deletes the func_SOC_OCV')
+    func_eta = property(_get_func_eta, _set_func_eta, _del_func_eta,
+                        'gets, sets, or deletes the func_eta')
 
     ###################################
     # Object initialization           #
     ###################################
 
-    def __init__(self, R0: float, R1: float, C1: float, func_SOC_OCV: Callable):
+    def __init__(self, R0: float, R1: float, C1: float, Q: float, func_SOC_OCV: Callable, func_eta: Callable):
         self._set_R0(R0=R0)
         self._set_R1(R1=R1)
         self._set_C1(C1=C1)
+        self._set_Q(cap=Q)
         self._set_func_SOC_OCV(func_SOC_OCV=func_SOC_OCV)
+        self._set_func_eta(func_eta=func_eta)
 
     ###################################
     # Object deletion                 #

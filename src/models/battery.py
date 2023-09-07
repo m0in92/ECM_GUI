@@ -2,7 +2,7 @@
 contains the classes and functionalities to calculate the battery cell SOC and terminal voltage
 """
 
-__all__ = []
+__all__ = ['Thevenin1RC']
 
 __author__ = 'Moin Ahmed'
 __copyright__ = 'Copyright 2023 by Moin Ahmed. All rights reserved.'
@@ -55,7 +55,7 @@ class Thevenin1RC:
     https://doi.org/10.1016/j.jpowsour.2012.11.044
     """
     @classmethod
-    def SOC_next(cls, dt: float, i_app: float, SOC_prev: float, Q: float, eta: float):
+    def soc_next(cls, dt: float, i_app: float, SOC_prev: float, Q: float, eta: float):
         """
         This methods calculates the SOC at the next time-step
         :param dt: time difference between the current and previous time steps [s]
