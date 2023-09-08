@@ -6,7 +6,7 @@ Provides classes and functionality for the core objects used by the equivalent c
 # Create an "__all__" list to support #
 #######################################
 
-__all__ = ['BaseCycler', 'ParameterSet', 'BatteryCell', 'DischargeCycler']
+__all__ = ['BaseCyclingStep', 'ParameterSet', 'BatteryCell', 'DischargeStep', 'ChargeStep', 'RestStep']
 
 #######################################
 # Module metadata/dunder-names        #
@@ -75,7 +75,7 @@ def check_for_callable_type(func: Optional[Callable]) -> None:
 
 
 @dataclass
-class BaseCycler(metaclass=abc.ABCMeta):
+class BaseCyclingStep(metaclass=abc.ABCMeta):
     """
     Abstract parent class for various battery cell cycling protocols.
     """
@@ -86,12 +86,10 @@ class BaseCycler(metaclass=abc.ABCMeta):
     charge_current: Optional[float] = field(default=None)
     discharge_current: Optional[float] = field(default=None)
     rest_time: Optional[float] = field(default=None)
-    num_cycle: Optional[int] = field(default=0)
     V_max: Optional[float] = field(default=None)
     V_min: Optional[float] = field(default=None)
-    cycle_steps: list = field(default_factory=lambda: [])
+    cycle_step_name: Optional[str] = field(default=None)
 
-    @abc.abstractmethod
     def get_current(self, step_name: str, t: float) -> float:
         """
         Returns the current for a particular cycling step. It is only valid for constant current situations.
@@ -352,7 +350,7 @@ class BatteryCell:
         self.soc_init = soc_init
 
 
-class DischargeCycler(BaseCycler):
+class DischargeStep(BaseCyclingStep):
     """
     Battery Cycler with the discharge step only
     """
@@ -360,14 +358,37 @@ class DischargeCycler(BaseCycler):
         super().__init__(discharge_current=-discharge_current, V_min=V_min, SOC_LIB_min=SOC_LIB_min,
                          SOC_LIB=SOC_LIB)
         self.num_cycle = 1
-        self.cycle_steps = ['discharge']
+        self.cycle_step_name = 'discharge'
         self.SOC_LIB_init = SOC_LIB
 
-    def get_current(self, step_name: str, t: float):
-        if step_name == 'discharge':
-            return self.discharge_current
-        else:
-            return 0.0
+    def reset(self) -> None:
+        self.time_elapsed = 0.0
+        self.SOC_LIB = self.SOC_LIB_init
+
+
+class ChargeStep(BaseCyclingStep):
+    """
+    Battery Cycler with the charge cycling step only
+    """
+    def __init__(self, charge_current: float, V_max: float, SOC_LIB_max: float, SOC_LIB: float) -> None:
+        super().__init__(charge_current=charge_current, V_max=V_max, SOC_LIB=SOC_LIB, SOC_LIB_max=SOC_LIB_max)
+        self.num_cycle = 1
+        self.cycle_step_name = 'charge'
+        self.SOC_LIB_init = SOC_LIB
+
+    def reset(self):
+        self.time_elapsed = 0.0
+        self.SOC_LIB = self.SOC_LIB_init
+
+
+class RestStep(BaseCyclingStep):
+    """
+    Battery rest cycling step where no current is applied and lasts until the inputted rest time
+    """
+    def __init__(self, rest_time: float, SOC_LIB: float) -> None:
+        super().__init__(rest_time=rest_time, SOC_LIB=SOC_LIB)
+        self.cycle_step_name = 'rest'
+        self.SOC_LIB_init = self.SOC_LIB
 
     def reset(self) -> None:
         self.time_elapsed = 0.0

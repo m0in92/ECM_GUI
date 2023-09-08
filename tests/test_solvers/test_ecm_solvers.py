@@ -6,7 +6,7 @@ import unittest
 
 import numpy as np
 
-from src import ParameterSet, BatteryCell, DischargeCycler
+from src import ParameterSet, BatteryCell, DischargeStep
 from src import DTSolver
 
 
@@ -36,8 +36,8 @@ def func_eta(soc):
 class TestDTSolver(unittest.TestCase):
     param = ParameterSet(R0=R0, R1=R1, C1=C1, Q=Q, func_SOC_OCV=func_SOC_OCV, func_eta=func_eta)
     b_cell = BatteryCell(param=param, soc_init=soc_init)
-    cycler_instance = DischargeCycler(discharge_current=discharge_current, V_min=V_min,
-                                      SOC_LIB_min=SOC_LIB_min, SOC_LIB=SOC_LIB)
+    cycler_instance = DischargeStep(discharge_current=discharge_current, V_min=V_min,
+                                    SOC_LIB_min=SOC_LIB_min, SOC_LIB=SOC_LIB)
 
     def test_constructor(self):
         solver = DTSolver(battery_cell=self.b_cell)
@@ -54,7 +54,7 @@ class TestDTSolver(unittest.TestCase):
 
     def test_solver(self):
         solver = DTSolver(battery_cell=self.b_cell)
-        sol = solver.solve(cycler=self.cycler_instance, dt=0.1)
+        sol = solver.solve(cycling_step=self.cycler_instance, dt=0.1)
         self.assertTrue(np.allclose(np.array([0, 0.1]), sol.array_t))
         self.assertTrue(np.allclose(np.array([0, -1.656]), sol.array_I))
         self.assertTrue(np.allclose(np.array([0.5, 0.49997352]), sol.array_soc))

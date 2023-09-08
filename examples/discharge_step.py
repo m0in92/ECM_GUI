@@ -1,7 +1,5 @@
 import src
 
-import matplotlib.pyplot as plt
-
 
 R0 = 0.02
 R1 = 0.05
@@ -34,11 +32,11 @@ def func_eta(i):
 
 param = src.ParameterSet(R0=R0, R1=R1, C1=C1, Q=Q, func_SOC_OCV=func_SOC_OCV, func_eta=func_eta)
 b_cell = src.BatteryCell(param=param, soc_init=soc_init)
-cycler_instance = src.DischargeCycler(discharge_current=discharge_current, V_min=V_min,
-                                      SOC_LIB_min=SOC_LIB_min, SOC_LIB=SOC_LIB)
+cycle_step = src.DischargeStep(discharge_current=discharge_current, V_min=V_min,
+                               SOC_LIB_min=SOC_LIB_min, SOC_LIB=SOC_LIB)
 
 solver = src.DTSolver(battery_cell=b_cell)
-sol = solver.solve(cycler=cycler_instance, dt=0.1)
+sol = solver.solve(cycling_step=cycle_step, dt=0.1)
 
 sol.comprehensive_plot()  # plot the results
 
