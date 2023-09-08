@@ -27,7 +27,7 @@ class DTSolver:
     Where k represents the time-point and delta_t represents the time-step between z[k+1] and z[k].
     """
 
-    def __init__(self, battery_cell_instance: BatteryCell) -> None:
+    def __init__(self, battery_cell: BatteryCell) -> None:
         """
         The class constructor for the solver object.
         :params ECM_obj: (Thevenin1RC) ECM model object
@@ -36,25 +36,27 @@ class DTSolver:
         :params i_app: (Numpy array) array of applied battery current associated with the time array.
         :param v_exp: (Numpy array) array of experimental battery terminal voltage data.
         """
-        if not isinstance(battery_cell_instance, BatteryCell):
+        if not isinstance(battery_cell, BatteryCell):
             raise TypeError("battery_cell_instance needs to be a BatteryCell type.")
-        self.b_cell = battery_cell_instance
+        self.b_cell = battery_cell
 
-    def solve(self, cycler_instance: BaseCycler, dt: float = 0.1) -> Solution:
+    def solve(self, cycler: BaseCycler, dt: float = 0.1) -> Solution:
         sol = Solution()  # initialize the solution object
-        sol.update_arrays(t=0, i_app=0, soc=self.b_cell.soc, v=self.b_cell.param.func_SOC_OCV(self.b_cell.soc))
+        sol.update_arrays(t=0.0, i_app=0.0, soc=self.b_cell.soc, v=self.b_cell.param.func_SOC_OCV(self.b_cell.soc),
+                          cap_discharge=0.0)
 
-        for cycle_no in range(cycler_instance.num_cycle):
-            for cycler_step in cycler_instance.cycle_steps:
-                t_prev = 0.0
-                i_r1_prev = 0.0
+        for cycle_no in range(cycler.num_cycle):
+            for cycler_step in cycler.cycle_steps:
+                t_prev = 0.0  # [s]
+                i_r1_prev = 0.0  # [A]
                 step_completed = False
+                cap_discharge = 0.0  # [A hr]
                 while not step_completed:
                     t_curr = t_prev + dt
-                    i_app = -cycler_instance.get_current(step_name=cycler_step, t=t_curr)
+                    i_app = -cycler.get_current(step_name=cycler_step, t=t_curr)
 
                     # break condition for the rest cycling step
-                    if cycler_step == 'rest' and t_curr > cycler_instance.rest_time:
+                    if cycler_step == 'rest' and t_curr > cycler.rest_time:
                         step_completed = True
 
                     # Calculate the SOC and i_R1 [A] for the current time step
@@ -69,13 +71,14 @@ class DTSolver:
                                       R0=self.b_cell.param.R0, R1=self.b_cell.param.R1, i_R1=i_r1_prev)
 
                     # loop termination criteria
-                    if (cycler_step == "charge") and (v > cycler_instance.V_max):
+                    if (cycler_step == "charge") and (v > cycler.V_max):
                         step_completed = True
-                    if (cycler_step == "discharge") and (v < cycler_instance.V_min):
+                    if (cycler_step == "discharge") and (v < cycler.V_min):
                         step_completed = True
 
                     # update the sol object
-                    sol.update_arrays(t=t_curr, i_app=-i_app, soc=self.b_cell.soc, v=v)
+                    cap_discharge = sol.calc_cap_discharge(cap_discharge_prev=cap_discharge, i_app=i_app, dt=dt)
+                    sol.update_arrays(t=t_curr, i_app=-i_app, soc=self.b_cell.soc, v=v, cap_discharge=cap_discharge)
                     t_prev = t_curr
         return sol
 

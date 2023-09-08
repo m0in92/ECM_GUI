@@ -116,7 +116,6 @@ class BaseCycler(metaclass=abc.ABCMeta):
         """
         pass
 
-
 #######################################
 # Concrete classes                    #
 #######################################

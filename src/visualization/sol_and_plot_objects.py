@@ -1,5 +1,5 @@
 """sol_and_plot_objects
-Contains the classes and functionality for the storing the simulation results and plottng them
+Contains the classes and functionality for the storing, preprocessing, and plotting of the simulation results.
 """
 
 __all__ = ['Solution']
@@ -24,14 +24,45 @@ class Solution:
     array_I: np.ndarray = field(default_factory=lambda: np.array([]))  # np array containing the applied current [A]
     array_soc: np.ndarray = field(default_factory=lambda: np.array([]))  # np array containing the battery cell soc
     array_V: np.ndarray = field(default_factory=lambda: np.array([]))  # np array containing the terminal potential [V]
+    array_cap_discharge: np.ndarray = field(default_factory=lambda: np.array([]))  # np array containing the discharge
+    # capacity [Ahr]
 
-    def update_arrays(self, t: float, i_app: float, soc: float, v: float):
+    @classmethod
+    def is_discharge(cls, i_app: float) -> bool:
+        """
+        Returns True if the applied current [A] leads to the battery discharge
+        :param i_app: applied current [A]
+        :return: (bool) True if the current leads to the battery discharge
+        """
+        flag = False
+        if i_app < 0:
+            flag = True
+        return flag
+
+    @classmethod
+    def calc_cap_discharge(cls, cap_discharge_prev: float, i_app: float, dt: float) -> float:
+        if cls.is_discharge(i_app=i_app):
+            return cap_discharge_prev + abs(i_app * dt / 3600)
+        else:
+            return cap_discharge_prev
+
+    def update_arrays(self, t: float, i_app: float, soc: float, v: float, cap_discharge: float) -> None:
+        """
+        Updates the instance's arrays with the new data values
+        :param t: time value [s]
+        :param i_app: applied current [A]
+        :param soc: state-of-charge
+        :param v: terminal voltage [V]
+        :param cap_discharge: discharge capacity [A hr]
+        """
         self.array_t = np.append(self.array_t, t)
         self.array_I = np.append(self.array_I, i_app)
         self.array_soc = np.append(self.array_soc, soc)
         self.array_V = np.append(self.array_V, v)
+        self.array_cap_discharge = np.append(self.array_cap_discharge, cap_discharge)
 
-    def set_matplotlib_settings(self):
+    @classmethod
+    def set_matplotlib_settings(cls):
         mpl.rcParams['lines.linewidth'] = 3
         plt.rc('axes', titlesize=20)
         plt.rc('axes', labelsize=12.5)

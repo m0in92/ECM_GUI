@@ -7,17 +7,25 @@ R0 = 0.02
 R1 = 0.05
 C1 = 0.003
 Q = 1.65
-soc_init = 1.0
+soc_init = 0.95
 
 discharge_current = 1.65
 V_min = 3.0
-SOC_LIB = 1.0
+SOC_LIB = soc_init
 SOC_LIB_min = 0.0
 
 
 def func_SOC_OCV(soc):
-    a, b, c, d, e = [0.08367763, 1.41222269, -2.34418315, 1.24012816, 3.12778336]
-    return a * soc ** 4 + b * soc ** 3 + c * soc ** 2 + d * soc + e
+    a, b, c, d, e, f, g, h, i, j, k, l, m = \
+    [3.39803735e+04, -1.86083253e+05, 4.40650925e+05, -5.86500338e+05,
+     4.74171271e+05, -2.29840038e+05, 5.53052667e+04, 3.05616190e+03,
+     -6.45471514e+03,  1.99278174e+03, -2.99381888e+02, 2.29345284e+01,
+     2.53496894e+00]
+
+    return a * soc ** 12 + b * soc ** 11 + c * soc ** 10 + \
+           d * soc ** 9 + e * soc ** 8 + f * soc ** 7 + \
+           g * soc ** 6 + h * soc ** 5 + i * soc ** 4 + \
+           j * soc ** 3 + k * soc ** 2 + l * soc + m
 
 
 def func_eta(i):
@@ -29,8 +37,8 @@ b_cell = src.BatteryCell(param=param, soc_init=soc_init)
 cycler_instance = src.DischargeCycler(discharge_current=discharge_current, V_min=V_min,
                                       SOC_LIB_min=SOC_LIB_min, SOC_LIB=SOC_LIB)
 
-solver = src.DTSolver(battery_cell_instance=b_cell)
-sol = solver.solve(cycler_instance=cycler_instance, dt=0.1)
+solver = src.DTSolver(battery_cell=b_cell)
+sol = solver.solve(cycler=cycler_instance, dt=0.1)
 
 sol.comprehensive_plot()  # plot the results
 

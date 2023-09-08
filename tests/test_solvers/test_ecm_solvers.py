@@ -40,7 +40,7 @@ class TestDTSolver(unittest.TestCase):
                                       SOC_LIB_min=SOC_LIB_min, SOC_LIB=SOC_LIB)
 
     def test_constructor(self):
-        solver = DTSolver(battery_cell_instance=self.b_cell)
+        solver = DTSolver(battery_cell=self.b_cell)
         self.assertEqual(type(self.b_cell), type(solver.b_cell))
         self.assertEqual(soc_init, solver.b_cell.soc_init)
         self.assertEqual(R0, solver.b_cell.param.R0)
@@ -50,11 +50,11 @@ class TestDTSolver(unittest.TestCase):
 
     def test_constructor2(self):
         with self.assertRaises(TypeError):
-            DTSolver(battery_cell_instance=None)
+            DTSolver(battery_cell=None)
 
     def test_solver(self):
-        solver = DTSolver(battery_cell_instance=self.b_cell)
-        sol = solver.solve(cycler_instance=self.cycler_instance, dt=0.1)
+        solver = DTSolver(battery_cell=self.b_cell)
+        sol = solver.solve(cycler=self.cycler_instance, dt=0.1)
         self.assertTrue(np.allclose(np.array([0, 0.1]), sol.array_t))
         self.assertTrue(np.allclose(np.array([0, -1.656]), sol.array_I))
         self.assertTrue(np.allclose(np.array([0.5, 0.49997352]), sol.array_soc))
