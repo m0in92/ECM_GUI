@@ -9,13 +9,20 @@ The following repository can be installed by cloning it or downloading the tar.g
 
 Use the following repository link when cloning this repository: 
 [git@github.com:m0in92/ECM_GUI.git](git@github.com:m0in92/ECM_GUI.git). Furthermore, the project python library 
-dependencies, numpy and matplotlib, should be installed in your project.
+dependencies, see dependencies section below, should be installed in your project.
 
 When using the tar.gz file, first extract the contents from the file. Then, `cd` into the extracted content's root 
 file path (where the setup.py file resides) and run the following into the command line:
 ```
 python setup.py install
 ```
+
+## Dependencies
+1. Python 3.11 and above
+2. numpy
+3. pandas
+4. matplotlib
+5. scipy
 
 ## Example Usage
 

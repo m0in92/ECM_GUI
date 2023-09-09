@@ -9,8 +9,11 @@ __copyright__ = 'Copyright 2023 by Moin Ahmed. All rights reserved.'
 __status__ = 'development'
 
 from dataclasses import dataclass, field
+from typing import Self, Optional
 
 import numpy as np
+import numpy.typing as npt
+import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -26,6 +29,14 @@ class Solution:
     array_V: np.ndarray = field(default_factory=lambda: np.array([]))  # np array containing the terminal potential [V]
     array_cap_discharge: np.ndarray = field(default_factory=lambda: np.array([]))  # np array containing the discharge
     # capacity [Ahr]
+
+    @classmethod
+    def read_from_csv_file(cls, filepath: str) -> Self:
+        df = pd.read_csv(filepath)
+        array_t = df['t [s]'].to_numpy()
+        array_I = df['I [A]'].to_numpy()
+        array_V = df['V [V]'].to_numpy()
+        return cls(array_t=array_t, array_I=array_I, array_V=array_V)
 
     @classmethod
     def is_discharge(cls, i_app: float) -> bool:
@@ -46,6 +57,14 @@ class Solution:
         else:
             return cap_discharge_prev
 
+    @classmethod
+    def set_matplotlib_settings(cls) -> None:
+        mpl.rcParams['lines.linewidth'] = 3
+        plt.rc('axes', titlesize=20)
+        plt.rc('axes', labelsize=12.5)
+        plt.rc('axes', labelweight='bold')
+        plt.rcParams['font.size'] = 15
+
     def update_arrays(self, t: float, i_app: float, soc: float, v: float, cap_discharge: float) -> None:
         """
         Updates the instance's arrays with the new data values
@@ -61,22 +80,17 @@ class Solution:
         self.array_V = np.append(self.array_V, v)
         self.array_cap_discharge = np.append(self.array_cap_discharge, cap_discharge)
 
-    @classmethod
-    def set_matplotlib_settings(cls):
-        mpl.rcParams['lines.linewidth'] = 3
-        plt.rc('axes', titlesize=20)
-        plt.rc('axes', labelsize=12.5)
-        plt.rc('axes', labelweight='bold')
-        plt.rcParams['font.size'] = 15
-
-    def comprehensive_plot(self, save_dir=None):
+    def comprehensive_plot(self, sol_exp: Optional[Self] = None, save_dir=None) -> None:
         self.set_matplotlib_settings()
         fig = plt.figure(figsize=(6.4, 6), dpi=300)
 
         ax1 = fig.add_subplot(311)
-        ax1.plot(self.array_t, self.array_V)
+        ax1.plot(self.array_t, self.array_V, label='sim')
         ax1.set_xlabel('Time [s]')
         ax1.set_ylabel('Voltage [V]')
+        if sol_exp:
+            ax1.plot(sol_exp.array_t, sol_exp.array_V, label='exp')
+            ax1.legend()
 
         ax2 = fig.add_subplot(312)
         ax2.plot(self.array_t, self.array_I)
