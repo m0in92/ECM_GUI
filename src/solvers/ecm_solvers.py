@@ -49,6 +49,12 @@ class DTSolver:
         return i_r1_prev, v
 
     def solve(self, cycling_step: BaseCyclingStep, dt: float = 0.1) -> Solution:
+        if isinstance(cycling_step, CustomStep):
+            return self._solve_custom_step(cycling_step=cycling_step, dt=dt)
+        else:
+            return self._solve_standard_cycling_steps(cycling_step=cycling_step, dt=dt)
+
+    def _solve_standard_cycling_steps(self, cycling_step: BaseCyclingStep, dt: float = 0.1) -> Solution:
         sol = Solution()  # initialize the solution object
         sol.update_arrays(t=0.0, i_app=0.0, soc=self.b_cell.soc, v=self.b_cell.param.func_SOC_OCV(self.b_cell.soc),
                           cap_discharge=0.0)
@@ -96,11 +102,6 @@ class DTSolver:
         while not step_completed:
             t_curr = t_prev + dt
             i_app = -cycling_step.get_current(step_name=cycling_step.cycle_step_name, t=t_curr)
-            print(i_app)
-
-            # break condition for the rest cycling step
-            if cycling_step.cycle_step_name == 'rest' and t_curr > cycling_step.rest_time:
-                step_completed = True
 
             # Calculate the SOC (and update the battery cell attribute), i_R1 [A], and v[V] for the current time step
             self.b_cell.soc = Thevenin1RC.soc_next(dt=dt, i_app=i_app, SOC_prev=self.b_cell.soc,
@@ -112,6 +113,8 @@ class DTSolver:
             if v > cycling_step.V_max:
                 step_completed = True
             if v < cycling_step.V_min:
+                step_completed = True
+            if t_curr > cycling_step.array_t[-1]:
                 step_completed = True
 
             # update the sol object

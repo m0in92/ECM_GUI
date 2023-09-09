@@ -13,9 +13,9 @@ I = df['Current(A)'].to_numpy()
 V = df['Voltage(V)'].to_numpy()
 
 # simulation parameters are below
-soc_init = 0.95
-V_min = 2.5
-V_max = 3.65
+soc_init = 0.38775
+V_min = 2
+V_max = 4
 SOC_LIB = soc_init
 SOC_LIB_min = 0.0
 SOC_LIB_max = 1.0
@@ -26,6 +26,6 @@ cycle_step = src.CustomStep(array_t=t, array_I=I,
                             V_min=V_min, V_max=V_max, SOC_LIB_min=SOC_LIB_min, SOC_LIB_max=SOC_LIB_max, SOC_LIB=SOC_LIB)
 
 solver = src.DTSolver(battery_cell=b_cell)
-sol = solver._solve_custom_step(cycling_step=cycle_step, dt=10)
+sol = solver.solve(cycling_step=cycle_step, dt=10)
 
 sol.comprehensive_plot()  # plot the results
