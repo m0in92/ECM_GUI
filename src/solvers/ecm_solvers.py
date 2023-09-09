@@ -41,6 +41,13 @@ class DTSolver:
             raise TypeError("battery_cell_instance needs to be a BatteryCell type.")
         self.b_cell = battery_cell
 
+    def calc_v(self, dt: float, i_app: float, i_r1_prev: float) -> tuple[float, float]:
+        i_r1_prev = Thevenin1RC.i_R1_next(dt=dt, i_app=i_app, i_R1_prev=i_r1_prev,
+                                          R1=self.b_cell.param.R1, C1=self.b_cell.param.C1)
+        v = Thevenin1RC.v(i_app=i_app, OCV=self.b_cell.param.func_SOC_OCV(self.b_cell.soc),
+                          R0=self.b_cell.param.R0, R1=self.b_cell.param.R1, i_R1=i_r1_prev)
+        return i_r1_prev, v
+
     def solve(self, cycling_step: BaseCyclingStep, dt: float = 0.1) -> Solution:
         sol = Solution()  # initialize the solution object
         sol.update_arrays(t=0.0, i_app=0.0, soc=self.b_cell.soc, v=self.b_cell.param.func_SOC_OCV(self.b_cell.soc),
@@ -58,21 +65,53 @@ class DTSolver:
             if cycling_step.cycle_step_name == 'rest' and t_curr > cycling_step.rest_time:
                 step_completed = True
 
-            # Calculate the SOC and i_R1 [A] for the current time step
+            # Calculate the SOC (and update the battery cell attribute), i_R1 [A], and v[V] for the current time step
             self.b_cell.soc = Thevenin1RC.soc_next(dt=dt, i_app=i_app, SOC_prev=self.b_cell.soc,
                                                    Q=self.b_cell.param.Q,
                                                    eta=self.b_cell.param.func_eta(self.b_cell.soc))
-            i_r1_prev = Thevenin1RC.i_R1_next(dt=dt, i_app=i_app, i_R1_prev=i_r1_prev,
-                                              R1=self.b_cell.param.R1, C1=self.b_cell.param.C1)
-
-            # calculate the cell terminal voltage [V]
-            v = Thevenin1RC.v(i_app=i_app, OCV=self.b_cell.param.func_SOC_OCV(self.b_cell.soc),
-                              R0=self.b_cell.param.R0, R1=self.b_cell.param.R1, i_R1=i_r1_prev)
+            i_r1_prev, v = self.calc_v(dt=dt, i_app=i_app, i_r1_prev=i_r1_prev)
 
             # loop termination criteria
             if (cycling_step.cycle_step_name == "charge") and (v > cycling_step.V_max):
                 step_completed = True
             if (cycling_step.cycle_step_name == "discharge") and (v < cycling_step.V_min):
+                step_completed = True
+
+            # update the sol object
+            cap_discharge = sol.calc_cap_discharge(cap_discharge_prev=cap_discharge, i_app=i_app, dt=dt)
+            sol.update_arrays(t=t_curr, i_app=-i_app, soc=self.b_cell.soc, v=v, cap_discharge=cap_discharge)
+            t_prev = t_curr
+        return sol
+
+    def _solve_custom_step(self, cycling_step: CustomStep, dt: float):
+        sol = Solution()  # initialize the solution object
+        sol.update_arrays(t=0.0, i_app=0.0, soc=self.b_cell.soc, v=self.b_cell.param.func_SOC_OCV(self.b_cell.soc),
+                          cap_discharge=0.0)
+
+        t_prev = 0.0  # [s]
+        i_r1_prev = 0.0  # [A]
+        step_completed = False
+        cap_discharge = 0.0  # [A hr]
+
+        while not step_completed:
+            t_curr = t_prev + dt
+            i_app = -cycling_step.get_current(step_name=cycling_step.cycle_step_name, t=t_curr)
+            print(i_app)
+
+            # break condition for the rest cycling step
+            if cycling_step.cycle_step_name == 'rest' and t_curr > cycling_step.rest_time:
+                step_completed = True
+
+            # Calculate the SOC (and update the battery cell attribute), i_R1 [A], and v[V] for the current time step
+            self.b_cell.soc = Thevenin1RC.soc_next(dt=dt, i_app=i_app, SOC_prev=self.b_cell.soc,
+                                                   Q=self.b_cell.param.Q,
+                                                   eta=self.b_cell.param.func_eta(self.b_cell.soc))
+            i_r1_prev, v = self.calc_v(dt=dt, i_app=i_app, i_r1_prev=i_r1_prev)
+
+            # loop termination criteria
+            if v > cycling_step.V_max:
+                step_completed = True
+            if v < cycling_step.V_min:
                 step_completed = True
 
             # update the sol object
