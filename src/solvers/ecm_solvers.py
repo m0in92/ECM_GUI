@@ -8,7 +8,8 @@ __author__ = 'Moin Ahmed'
 __copyright__ = 'Copyright 2023 by Moin Ahmed. All rights reserved.'
 __status__ = 'development'
 
-from src.core.battery_objects import BatteryCell, BaseCyclingStep
+from src.core.battery_objects import BatteryCell
+from src.core.cycling_steps import BaseCyclingStep, CustomStep
 from src.models.battery import Thevenin1RC
 from src.visualization.sol_and_plot_objects import Solution
 
