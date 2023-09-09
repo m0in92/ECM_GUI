@@ -16,6 +16,7 @@ import numpy.typing as npt
 import pandas as pd
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import scipy.interpolate
 
 
 @dataclass
@@ -79,6 +80,11 @@ class Solution:
         self.array_soc = np.append(self.array_soc, soc)
         self.array_V = np.append(self.array_V, v)
         self.array_cap_discharge = np.append(self.array_cap_discharge, cap_discharge)
+
+    def mse(self, sol_exp: Self) -> float:
+        func_v_sim = scipy.interpolate.interp1d(self.array_t, self.array_V, kind='nearest', fill_value='extrapolate')
+        v_sim = func_v_sim(sol_exp.array_t)
+        return np.sqrt(np.sum((v_sim - sol_exp.array_V) ** 2))
 
     def comprehensive_plot(self, sol_exp: Optional[Self] = None, save_dir=None) -> None:
         self.set_matplotlib_settings()

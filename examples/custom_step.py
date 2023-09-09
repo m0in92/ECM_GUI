@@ -23,4 +23,6 @@ cycle_step = src.CustomStep(array_t=sol_exp.array_t, array_I=sol_exp.array_I,
 solver = src.DTSolver(battery_cell=b_cell)
 sol = solver.solve(cycling_step=cycle_step, dt=10)
 
+print(sol.mse(sol_exp=sol_exp))
+
 sol.comprehensive_plot(sol_exp=sol_exp)  # plot the results

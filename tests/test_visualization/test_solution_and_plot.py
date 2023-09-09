@@ -2,9 +2,11 @@
 Contains the unittest for the classes in the sol_and_plot_objects module
 """
 
+import os
 import unittest
 
 import numpy as np
+import pandas as pd
 
 from src.visualization.sol_and_plot_objects import Solution
 
@@ -62,5 +64,17 @@ class TestSolution(unittest.TestCase):
         self.assertEqual(0.0,
                          Solution().calc_cap_discharge(cap_discharge_prev=cap_discharge_prev,
                                                        dt=dt, i_app=i_app_charge))
+
+    def test_read_from_csv(self):
+        filepath_to_csv = os.path.join('tests', 'test_visualization', 'A1-A123-Dynamics.csv')
+        sol_exp = Solution().read_from_csv_file(filepath=filepath_to_csv)
+        df = pd.read_csv(filepath_to_csv)
+        print(os.getcwd())
+        t = df['t [s]'].to_numpy()
+        I = df['I [A]'].to_numpy()
+        V = df['V [V]'].to_numpy()
+        self.assertTrue(np.array_equal(t, sol_exp.array_t))
+        self.assertTrue(np.array_equal(I, sol_exp.array_I))
+        self.assertTrue(np.array_equal(V, sol_exp.array_V))
 
 
