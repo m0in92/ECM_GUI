@@ -6,6 +6,9 @@ ECM_GUI.egg-info/dependency_links.txt
 ECM_GUI.egg-info/requires.txt
 ECM_GUI.egg-info/top_level.txt
 examples/__init__.py
-examples/discharge_cycle.py
+examples/charge_cycle.py
+examples/discharge_step.py
+parameter_sets/Calce123.py
+parameter_sets/__init__.py
 src/__init__.py
 tests/__init__.py

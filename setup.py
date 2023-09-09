@@ -7,4 +7,4 @@ setup(name='ECM_GUI',
       author='Moin Ahmed',
       author_email='moinahmed100@gmail.com',
       install_requires=['numpy', 'matplotlib', 'pytest'],
-      packages=['src', 'examples', 'tests'])
+      packages=['parameter_sets', 'src', 'examples', 'tests'])
