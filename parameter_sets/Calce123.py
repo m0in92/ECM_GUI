@@ -1,11 +1,11 @@
 """Calce123
-Thevenein 1RC parameters for Calce123 battery cell
+Thevenein 1RC parameters for CalceA123 battery cell
 """
 
-R0 = 0.02
-R1 = 0.05
-C1 = 0.003
-Q = 1.65
+R0 = 0.225
+R1 = 0.001
+C1 = 0.03
+Q = 1.1
 
 
 def func_SOC_OCV(soc):

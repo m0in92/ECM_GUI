@@ -4,8 +4,8 @@ import src
 
 
 soc_init = 0.95
-discharge_current = 1.65
-V_min = 3.0
+discharge_current = 1.1
+V_min = 2.5
 SOC_LIB = soc_init
 SOC_LIB_min = 0.0
 

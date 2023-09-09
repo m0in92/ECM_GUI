@@ -3,8 +3,8 @@ import src
 
 
 soc_init = 0.05
-charge_current = 1.65
-V_max = 3.5
+charge_current = 1.1
+V_max = 3.65
 SOC_LIB = soc_init
 SOC_LIB_max = 1.0
 
