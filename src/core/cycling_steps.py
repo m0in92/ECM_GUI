@@ -14,6 +14,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 import numpy as np
+import scipy.interpolate
 
 
 @dataclass
@@ -91,5 +92,17 @@ class RestStep(BaseCyclingStep):
         self.SOC_LIB_init = self.SOC_LIB
 
 
-class CustomStep:
-    pass
+class CustomStep(BaseCyclingStep):
+    """
+    This class contains the variables need for the custom battery cell cycling
+    """
+    def __init__(self, array_t: np.ndarray, array_I: np.ndarray,
+                 V_min: float, V_max: float, SOC_LIB_min: float, SOC_LIB_max: float, SOC_LIB):
+        super().__init__(V_min=V_min, V_max=V_max, SOC_LIB_min=SOC_LIB_min, SOC_LIB_max=SOC_LIB_max, SOC_LIB=SOC_LIB)
+        self.array_t = array_t
+        self.array_I = array_I
+
+    def get_current(self, step_name: str, t: float) -> float:
+        return scipy.interpolate.interp1d(self.array_t, self.array_I, kind='previous', fill_value='extrapolate')(t)
+
+
