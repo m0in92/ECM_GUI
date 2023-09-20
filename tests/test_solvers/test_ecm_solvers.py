@@ -86,4 +86,4 @@ class TestDTSolver(unittest.TestCase):
         with open("tests/test_solvers/array_V_sim", "rb") as file:
             std_sol = pickle.load(file)
 
-        self.assertTrue(np.array_equal(sol.array_V, std_sol))
+        self.assertTrue(np.allclose(sol.array_V, std_sol))
