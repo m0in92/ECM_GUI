@@ -97,7 +97,7 @@ class CustomStep(BaseCyclingStep):
     This class contains the variables need for the custom battery cell cycling
     """
     def __init__(self, array_t: np.ndarray, array_I: np.ndarray,
-                 V_min: float, V_max: float, SOC_LIB_min: float, SOC_LIB_max: float, SOC_LIB):
+                 V_min: float, V_max: float, SOC_LIB_min: float, SOC_LIB_max: float, SOC_LIB: float):
         super().__init__(V_min=V_min, V_max=V_max, SOC_LIB_min=SOC_LIB_min, SOC_LIB_max=SOC_LIB_max, SOC_LIB=SOC_LIB)
         self.array_t = array_t
         self.array_I = array_I

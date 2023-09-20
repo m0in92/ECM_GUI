@@ -16,7 +16,7 @@ import numpy.typing as npt
 import scipy.linalg
 import matplotlib.pyplot as plt
 
-from src import NormalRandomVector
+from src.observers.random_variables import NormalRandomVector
 
 
 class InvalidKFMethodType(Exception):

@@ -92,6 +92,41 @@ class Solution:
         v_sim = func_v_sim(sol_exp.array_t)
         return np.sqrt(np.sum((v_sim - sol_exp.array_V) ** 2))
 
+    def plot_tv(self):
+        """
+        Plots the time and terminal cell voltage
+        """
+        self.__set_matplotlib_settings()
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        ax.plot(self.array_t, self.array_V)
+        ax.set_xlabel('Time [s]')
+        ax.set_ylabel('Voltage [V]')
+
+        plt.tight_layout()
+        plt.show()
+
+    def plot_tiv(self):
+        """
+        Plots a figure with subplots on time [s] vs. voltage [V] and current [A]
+        """
+        self.__set_matplotlib_settings()
+        fig = plt.figure()
+
+        ax1 = fig.add_subplot(211)
+        ax1.plot(self.array_t, self.array_V)
+        ax1.set_xlabel('Time [s]')
+        ax1.set_ylabel('Voltage [V]')
+
+        ax2 = fig.add_subplot(212)
+        ax2.plot(self.array_t, self.array_I)
+        ax2.set_xlabel('Time [s]')
+        ax2.set_ylabel('Current [A]')
+
+        plt.tight_layout()
+        plt.show()
+
     def comprehensive_plot(self, sol_exp: Optional[Self] = None, save_dir=None) -> None:
         self.__set_matplotlib_settings()
         fig = plt.figure(figsize=(6.4, 6), dpi=300)
