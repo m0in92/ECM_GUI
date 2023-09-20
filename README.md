@@ -3,6 +3,9 @@
 This Python package is the lithium-ion simulator using the equivalent-circuit
 model.
 
+The documentation is being updated and the current version can be found at 
+[https://ecm.readthedocs.io/en/latest/](https://ecm.readthedocs.io/en/latest/).
+
 ## Installation and setup
 
 The following repository can be installed by cloning it or downloading the tar.gz file in the dist directory.
