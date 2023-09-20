@@ -103,6 +103,13 @@ class CustomStep(BaseCyclingStep):
         self.array_I = array_I
 
     def get_current(self, step_name: str, t: float) -> float:
+        """
+        Finds the current at a given time using interpolation. The interpolation outputs the current from the previous
+        time step.
+        :param step_name: The cycling step name
+        :param t: the time value [s]
+        :returns: the current value [A]
+        """
         return scipy.interpolate.interp1d(self.array_t, self.array_I, kind='previous', fill_value='extrapolate')(t)
 
 

@@ -1,3 +1,12 @@
+"""
+This example script performs the ECM cycling on a charge step.
+"""
+
+__author__ = 'Moin Ahmed'
+__copywrite__ = 'Copywrite 2023 by Moin Ahmed. All rights reserved.'
+__status__ = 'deployed'
+
+
 from parameter_sets.Calce123 import *
 import src
 

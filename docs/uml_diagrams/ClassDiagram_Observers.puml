@@ -1,0 +1,59 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+@startuml
+'https://plantuml.com/class-diagram
+
+class NormalRandomVariable
+class SPKF
+
+SPKF -left-> NormalRandomVariable
+
+class NormalRandomVariable {
++ vector: npt.ArrayLike
++ cov: npt.ArrayLike
++ dim(): int
+}
+
+class SPKF {
++ x: NormalRandomVariable
++ w: NormalRandomVariable
++ v: NormalRandomVariable
++ y_dim: int
++ func_f: Callable
++ func_h: Callable
++ Nx: int
++ Nw: int
++ Nv: int
++ L: int
++ p: int
++ method_type: str
+
++ gamma: float
++ h: float
++ aug_vector: npt.ArrayLike
++ aug_cov: npt.ArrayLike
++ array_alpha_m: npt.ArrayLike
++ array_alpha_c: npt.ArrayLike
++ x_sp: npt.ArrayLike
++ x_sp_x: npt.ArrayLike
++ x_sp_w: npt.ArrayLike
++ x_sp_v: npt.ArrayLike
+
++ <u>plot(): None
+
+- state_prediction(u: float): tuple[npt.ArrayLike, npt.ArrayLike]
+- cov_prediction(Xx: npt.ArrayLike): npt.ArrayLike
+- output_estimate(Xx: npt.ArrayLike): npt.ArrayLike
+- estimate_gain_matrix(y: npt.ArrayLike, yhat: npt.ArrayLike tuple[npt.ArrayLike, npt.ArrayLike]
+- state_update(L: npt.ArrayLike, ytrue: npt.ArrayLike, yhat: npt.ArrayLike): None
+- cov_measurement_update(Lx: npt.ArrayLike, SigmaY: npt.ArrayLike): None
+
++ solve(u: float, y_true: npt.ArrayLike)
+}
+
+
+
+@enduml
+
+@enduml

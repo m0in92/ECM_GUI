@@ -41,7 +41,7 @@ class DTSolver:
             raise TypeError("battery_cell_instance needs to be a BatteryCell type.")
         self.b_cell = battery_cell
 
-    def calc_v(self, dt: float, i_app: float, i_r1_prev: float) -> tuple[float, float]:
+    def __calc_v(self, dt: float, i_app: float, i_r1_prev: float) -> tuple[float, float]:
         i_r1_prev = Thevenin1RC.i_R1_next(dt=dt, i_app=i_app, i_R1_prev=i_r1_prev,
                                           R1=self.b_cell.param.R1, C1=self.b_cell.param.C1)
         v = Thevenin1RC.v(i_app=i_app, OCV=self.b_cell.param.func_SOC_OCV(self.b_cell.soc),
@@ -50,11 +50,11 @@ class DTSolver:
 
     def solve(self, cycling_step: BaseCyclingStep, dt: float = 0.1) -> Solution:
         if isinstance(cycling_step, CustomStep):
-            return self._solve_custom_step(cycling_step=cycling_step, dt=dt)
+            return self.__solve_custom_step(cycling_step=cycling_step, dt=dt)
         else:
-            return self._solve_standard_cycling_steps(cycling_step=cycling_step, dt=dt)
+            return self.__solve_standard_cycling_steps(cycling_step=cycling_step, dt=dt)
 
-    def _solve_standard_cycling_steps(self, cycling_step: BaseCyclingStep, dt: float = 0.1) -> Solution:
+    def __solve_standard_cycling_steps(self, cycling_step: BaseCyclingStep, dt: float = 0.1) -> Solution:
         sol = Solution()  # initialize the solution object
         sol.update_arrays(t=0.0, i_app=0.0, soc=self.b_cell.soc, v=self.b_cell.param.func_SOC_OCV(self.b_cell.soc),
                           cap_discharge=0.0)
@@ -75,7 +75,7 @@ class DTSolver:
             self.b_cell.soc = Thevenin1RC.soc_next(dt=dt, i_app=i_app, SOC_prev=self.b_cell.soc,
                                                    Q=self.b_cell.param.Q,
                                                    eta=self.b_cell.param.func_eta(self.b_cell.soc))
-            i_r1_prev, v = self.calc_v(dt=dt, i_app=i_app, i_r1_prev=i_r1_prev)
+            i_r1_prev, v = self.__calc_v(dt=dt, i_app=i_app, i_r1_prev=i_r1_prev)
 
             # loop termination criteria
             if (cycling_step.cycle_step_name == "charge") and (v > cycling_step.V_max):
@@ -89,7 +89,7 @@ class DTSolver:
             t_prev = t_curr
         return sol
 
-    def _solve_custom_step(self, cycling_step: CustomStep, dt: float):
+    def __solve_custom_step(self, cycling_step: CustomStep, dt: float):
         sol = Solution()  # initialize the solution object
         sol.update_arrays(t=0.0, i_app=0.0, soc=self.b_cell.soc, v=self.b_cell.param.func_SOC_OCV(self.b_cell.soc),
                           cap_discharge=0.0)
@@ -107,7 +107,7 @@ class DTSolver:
             self.b_cell.soc = Thevenin1RC.soc_next(dt=dt, i_app=i_app, SOC_prev=self.b_cell.soc,
                                                    Q=self.b_cell.param.Q,
                                                    eta=self.b_cell.param.func_eta(self.b_cell.soc))
-            i_r1_prev, v = self.calc_v(dt=dt, i_app=i_app, i_r1_prev=i_r1_prev)
+            i_r1_prev, v = self.__calc_v(dt=dt, i_app=i_app, i_r1_prev=i_r1_prev)
 
             # loop termination criteria
             if v > cycling_step.V_max:

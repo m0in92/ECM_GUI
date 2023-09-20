@@ -1,0 +1,92 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+BatteryCell *-right- ParameterSet
+DTSolver *-up- BatteryCell
+DTSolver -left-> Thevenin1RC
+DTSolver -right-> Solution
+DTSolver --> BaseCyclingStep
+BaseCyclingStep <|-right- DischargeStep
+BaseCyclingStep <|-left- ChargeStep
+BaseCyclingStep <|-right- RestStep
+BaseCyclingStep <|-left- CustomStep
+
+class ParameterSet {
++ R0: float
++ R1: float
++ C1: float
++ battery_cap: float
+
++ func_SOC_OCV: Callable
++ func_eta: Callable
+}
+
+class BatteryCell {
++ param: ParameterSet
++ soc_init: float
+}
+
+class Thevenin1RC {
++ <u> soc_next(dt: float, i_app: float, SOC_prev: float, Q: float, eta: float): float
++ <u> i_R1_next(dt: float, i_app: float, i_R1_prev: float, R1: float, C1: float): float
++ <u> v(i_app, OCV: float, R0: float, R1: float, i_R1: float): float
+}
+
+class Solution {
++ array_t
++ array_I
++ array_soc
++ array_V
++ array_cap_discharge
+
++ read_from_csv_file(file_path: str): Solution
++ update_arrays(): None
+- is_discharge(): None
++ calc_discharge_cap(): float
++ mse(sol_exp: Solution): float
+
+- <u> set_matplot_settings(): None
++ plot_comprehensive(): None
+}
+
+abstract class BaseCyclingStep {
++ time_elapsed: float
+
++ SOC_LIB: float
++ SOC_LIB_min: float
++ SOC_LIB_max: float
+
++ charge_current: float
++ discharge_current: float
++ rest_time: float
+
++ num_cycles: int
+V_max: float
+V_min: float
+cycle_steps: list
+
++ reset(): None
++ get_current(...): float
+}
+
+class DTSolver {
++ b_cell: BatteryCell
+
+- calc_v(...): Solution
+- solve_standard_cycling_steps(...): Solution
+- solve_custom_cycling_step(...): Solution
++ solve(cycler: BaseCyclingStep): Solution
+}
+
+class DischargeStep {}
+
+class ChargeStep {}
+
+class RestStep {}
+
+class CustomStep {
+array_t: npt.ArrayLike
+array_I: npt.ArrayLike
+}
+
+@enduml

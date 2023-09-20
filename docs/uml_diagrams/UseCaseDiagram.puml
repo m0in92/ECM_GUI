@@ -1,0 +1,22 @@
+@startuml
+skinparam actorStyle awesome
+
+:Python User: as User
+:Python Developer and Electrochemist: as EC
+:Python Developer and Mathematician: as Math
+
+
+User --> (Simulation)
+(Simulation) --> (Visualize Results)
+(Visualize Results) -> User
+
+User --> (Compare Experimental Results)
+
+User --> (Apply Observers to Experimental Data)
+
+EC --> (Create Model Objects)
+
+Math --> (Create Solver Objects)
+Math --> (Create Observer Objects)
+
+@enduml

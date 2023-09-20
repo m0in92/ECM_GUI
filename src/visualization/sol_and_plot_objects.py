@@ -40,7 +40,7 @@ class Solution:
         return cls(array_t=array_t, array_I=array_I, array_V=array_V)
 
     @classmethod
-    def is_discharge(cls, i_app: float) -> bool:
+    def __is_discharge(cls, i_app: float) -> bool:
         """
         Returns True if the applied current [A] leads to the battery discharge
         :param i_app: applied current [A]
@@ -53,13 +53,13 @@ class Solution:
 
     @classmethod
     def calc_cap_discharge(cls, cap_discharge_prev: float, i_app: float, dt: float) -> float:
-        if cls.is_discharge(i_app=i_app):
+        if cls.__is_discharge(i_app=i_app):
             return cap_discharge_prev + abs(i_app * dt / 3600)
         else:
             return cap_discharge_prev
 
     @classmethod
-    def set_matplotlib_settings(cls) -> None:
+    def __set_matplotlib_settings(cls) -> None:
         mpl.rcParams['lines.linewidth'] = 3
         plt.rc('axes', titlesize=20)
         plt.rc('axes', labelsize=12.5)
@@ -82,12 +82,18 @@ class Solution:
         self.array_cap_discharge = np.append(self.array_cap_discharge, cap_discharge)
 
     def mse(self, sol_exp: Self) -> float:
+        """
+        Calculates the mse of the instance's terminal voltage and the inputted Solution instance.
+        :param sol_exp: (Solution) another Solution instance, for e.g., a Solution instance containing experimental
+        values
+        :return: (float) mse value
+        """
         func_v_sim = scipy.interpolate.interp1d(self.array_t, self.array_V, kind='nearest', fill_value='extrapolate')
         v_sim = func_v_sim(sol_exp.array_t)
         return np.sqrt(np.sum((v_sim - sol_exp.array_V) ** 2))
 
     def comprehensive_plot(self, sol_exp: Optional[Self] = None, save_dir=None) -> None:
-        self.set_matplotlib_settings()
+        self.__set_matplotlib_settings()
         fig = plt.figure(figsize=(6.4, 6), dpi=300)
 
         ax1 = fig.add_subplot(311)
