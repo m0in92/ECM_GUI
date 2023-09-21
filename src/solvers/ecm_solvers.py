@@ -8,6 +8,8 @@ __author__ = 'Moin Ahmed'
 __copyright__ = 'Copyright 2023 by Moin Ahmed. All rights reserved.'
 __status__ = 'development'
 
+from typing import Optional
+
 import numpy as np
 
 from src.core.battery_objects import BatteryCell
@@ -65,14 +67,15 @@ class DTSolver:
         cap_discharge = 0.0  # [A hr]
         while not step_completed:
             t_curr = t_prev + dt
-            i_app = -cycling_step.get_current(step_name=cycling_step.cycle_step_name, t=t_curr)
+            i_app = cycling_step.get_current(step_name=cycling_step.cycle_step_name, t=t_curr)
+            i_app_prev = cycling_step.get_current(step_name=cycling_step.cycle_step_name, t=t_prev)
 
             # break condition for the rest cycling step
             if cycling_step.cycle_step_name == 'rest' and t_curr > cycling_step.rest_time:
                 step_completed = True
 
             # Calculate the SOC (and update the battery cell attribute), i_R1 [A], and v[V] for the current time step
-            self.b_cell.soc = Thevenin1RC.soc_next(dt=dt, i_app=i_app, SOC_prev=self.b_cell.soc,
+            self.b_cell.soc = Thevenin1RC.soc_next(dt=dt, i_app=i_app_prev, SOC_prev=self.b_cell.soc,
                                                    Q=self.b_cell.param.Q,
                                                    eta=self.b_cell.param.func_eta(self.b_cell.soc))
             i_r1_prev, v = self.__calc_v(dt=dt, i_app=i_app, i_r1_prev=i_r1_prev)
@@ -101,13 +104,14 @@ class DTSolver:
 
         while not step_completed:
             t_curr = t_prev + dt
-            i_app = -cycling_step.get_current(step_name=cycling_step.cycle_step_name, t=t_curr)
+            i_app_prev = cycling_step.get_current(step_name=cycling_step.cycle_step_name, t=t_prev)
+            i_app_curr = cycling_step.get_current(step_name=cycling_step.cycle_step_name, t=t_curr)
 
             # Calculate the SOC (and update the battery cell attribute), i_R1 [A], and v[V] for the current time step
-            self.b_cell.soc = Thevenin1RC.soc_next(dt=dt, i_app=i_app, SOC_prev=self.b_cell.soc,
+            self.b_cell.soc = Thevenin1RC.soc_next(dt=dt, i_app=i_app_prev, SOC_prev=self.b_cell.soc,
                                                    Q=self.b_cell.param.Q,
                                                    eta=self.b_cell.param.func_eta(self.b_cell.soc))
-            i_r1_prev, v = self.__calc_v(dt=dt, i_app=i_app, i_r1_prev=i_r1_prev)
+            i_r1_prev, v = self.__calc_v(dt=dt, i_app=i_app_curr, i_r1_prev=i_r1_prev)
 
             # loop termination criteria
             if v > cycling_step.V_max:
@@ -118,8 +122,8 @@ class DTSolver:
                 step_completed = True
 
             # update the sol object
-            cap_discharge = sol.calc_cap_discharge(cap_discharge_prev=cap_discharge, i_app=i_app, dt=dt)
-            sol.update_arrays(t=t_curr, i_app=-i_app, soc=self.b_cell.soc, v=v, cap_discharge=cap_discharge)
+            cap_discharge = sol.calc_cap_discharge(cap_discharge_prev=cap_discharge, i_app=i_app_curr, dt=dt)
+            sol.update_arrays(t=t_curr, i_app=i_app_curr, soc=self.b_cell.soc, v=v, cap_discharge=cap_discharge)
             t_prev = t_curr
         return sol
 
@@ -157,16 +161,35 @@ class DTSolver:
                self.b_cell.param.R0 * u_k + v_k
 
     def solveSPKF(self, sol_exp: Solution, cov_soc: float, cov_current: float, cov_process: float, cov_sensor: float,
-                  V_min, V_max, SOC_LIB_min, SOC_LIB_max, SOC_LIB) -> Solution:
+                  V_min, V_max, SOC_LIB_min, SOC_LIB_max, SOC_LIB,
+                  dt: Optional[float] = None) -> Solution:
+        """
+        Performs the Thevenin equivalent circuit model using the sigma point kalman filter
+        :param sol_exp: Solution object from the experimental data.
+        :param cov_soc: covariance of the soc
+        :param cov_current: covariance of i_r1
+        :param cov_process: covariance of the system process
+        :param cov_sensor: covariance of the voltage sensor
+        :param V_min: threshold cell terminal voltage [V]
+        :param V_max: threshold cell terminal voltage [V]
+        :param SOC_LIB_min: minimum LIB SOC
+        :param SOC_LIB_max: maximum LIB SOC
+        :param SOC_LIB: LIB SOC
+        :param dt: time difference between calculation time step. If set to None, then the time difference
+        from the experimental is used for each time step.
+        :return: (Solution) Solution object containing the results from the simulations.
+        """
         sol = Solution()  # initialize the solution object
 
         cycling_step = CustomStep(sol_exp.array_t, sol_exp.array_I,
-                            V_min, V_max, SOC_LIB_min, SOC_LIB_max, SOC_LIB)  # current is added to the cycler object.
+                                  V_min, V_max, SOC_LIB_min, SOC_LIB_max,
+                                  SOC_LIB)  # current is added to the cycler object.
         array_y_true = sol_exp.array_V  # y_true is extracted from the solution object
 
         # create Normal Random Variables below
-        vector_x = np.array([[self.b_cell.soc], [0]])
-        cov_x = np.array([[cov_soc, 0],[0, cov_current]])
+        i_r1_init = 0.0  # [A]
+        vector_x = np.array([[self.b_cell.soc], [i_r1_init]])
+        cov_x = np.array([[cov_soc, 0], [0, cov_current]])
         vector_w = np.array([[0]])
         cov_w = np.array([[cov_process]])
         vector_v = np.array([[0]])
@@ -181,22 +204,22 @@ class DTSolver:
 
         # The solution loop is run below
         t_prev = 0.0  # [s]
-        i_r1_prev = 0.0  # [A]
         step_completed = False
-        cap_discharge = 0.0  # [A hr]
+        # cap_discharge = 0.0  # [A hr]
 
-        for i in range(len(cycling_step.array_t)):
+        i = 1
+        while not step_completed:
             t_curr = cycling_step.array_t[i]
-            self.__dt = t_curr - t_prev
-            i_app = -cycling_step.array_I[i]
+            if dt is None:
+                self.__dt = t_curr - t_prev
+            i_app_prev = cycling_step.array_I[i-1]
+            i_app_curr = cycling_step.array_I[i]
 
-            instance_spkf.solve(u=np.array([[i_app],[i_r1_prev]]), y_true=array_y_true[i])
-
-            # z_array = np.append(z_array, self.spkf_object.xhat[0,0])
-            # v_array = np.append(v_array, self.spkf_object.yhat[0])
+            instance_spkf.solve(u=i_app_prev, y_true=array_y_true[i])
 
             self.b_cell.soc = instance_spkf.x.get_vector()[0, 0]
-            v = self.__calc_v(dt=self.__dt, i_app=i_app, i_r1_prev=i_r1_prev)[1]
+            i_r1 = instance_spkf.x.get_vector()[1, 0]
+            v = self.__calc_v(dt=self.__dt, i_app=i_app_curr, i_r1_prev=i_r1)[1]
 
             # loop termination criteria
             if v > cycling_step.V_max:
@@ -205,17 +228,14 @@ class DTSolver:
                 step_completed = True
             if t_curr > cycling_step.array_t[-1]:
                 step_completed = True
+            if i >= len(cycling_step.array_t) - 1:
+                step_completed = True
 
             # update sol attributes
-            sol.update_arrays(t=t_curr, i_app=-i_app, soc=self.b_cell.soc, v=v, cap_discharge=0.0)
+            sol.update_arrays(t=t_curr, i_app=i_app_curr, soc=self.b_cell.soc, v=v, cap_discharge=0.0)
 
             # update simulation parameters
             t_prev = t_curr
-            i_r1_prev = instance_spkf.x.get_vector()[1, 0]  # need to update this expression
+            i += 1
 
         return sol
-
-
-
-
-

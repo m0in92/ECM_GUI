@@ -19,7 +19,7 @@ class TestDischargeCycler(unittest.TestCase):
                                           V_min=self.V_min,
                                           SOC_LIB_min=self.SOC_LIB_min, SOC_LIB=self.SOC_LIB)
         self.assertEqual(0.0, cycler_instance.time_elapsed)
-        self.assertEqual(-self.discharge_current, cycler_instance.discharge_current)
+        self.assertEqual(self.discharge_current, cycler_instance.discharge_current)
         self.assertEqual(self.SOC_LIB, cycler_instance.SOC_LIB)
         self.assertEqual(self.SOC_LIB_min, cycler_instance.SOC_LIB_min)
 
@@ -35,7 +35,7 @@ class TestDischargeCycler(unittest.TestCase):
                                        V_max=self.V_max,
                                        SOC_LIB_max=self.SOC_LIB_max, SOC_LIB=self.SOC_LIB)
         self.assertEqual(0.0, cycler_instance.time_elapsed)
-        self.assertEqual(self.charge_current, cycler_instance.charge_current)
+        self.assertEqual(-self.charge_current, cycler_instance.charge_current)
         self.assertEqual(self.SOC_LIB, cycler_instance.SOC_LIB)
         self.assertEqual(self.SOC_LIB_max, cycler_instance.SOC_LIB_max)
 

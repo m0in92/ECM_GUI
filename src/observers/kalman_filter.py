@@ -245,3 +245,4 @@ class SPKF:
         SigmaY, Lx = self.__estimator_gain_matrix(y=y, yhat=y_hat, xs=Xs)  # Step 2a
         self.__state_update(L=Lx, ytrue=y_true, yhat=y_hat)  # Step 2b
         self.__cov_measurement_update(Lx=Lx, SigmaY=SigmaY)  # Step 2c
+

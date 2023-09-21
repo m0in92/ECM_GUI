@@ -14,8 +14,8 @@ import src
 sol_exp = src.Solution().read_from_csv_file(filepath='A1-A123-Dynamics.csv')
 
 # simulation parameters are below
-soc_init = 0.38775
-V_min = 2
+soc_init = 0.0
+V_min = 1
 V_max = 4
 SOC_LIB = soc_init
 SOC_LIB_min = 0.0
@@ -25,8 +25,10 @@ param = src.ParameterSet(R0=R0, R1=R1, C1=C1, Q=Q, func_SOC_OCV=func_SOC_OCV, fu
 b_cell = src.BatteryCell(param=param, soc_init=soc_init)
 
 solver = src.DTSolver(battery_cell=b_cell)
-sol = solver.solveSPKF(sol_exp=sol_exp, cov_soc=1e-8, cov_current=1e-8, cov_sensor=1e-8, cov_process=1e-8,
+sol = solver.solveSPKF(sol_exp=sol_exp, cov_soc=1e-6, cov_current=1e-6, cov_sensor=1e-6, cov_process=1e-6,
                        V_min=V_min, V_max=V_max, SOC_LIB_min=SOC_LIB_min, SOC_LIB_max=SOC_LIB_max, SOC_LIB=soc_init)
+
+print(sol.mse(sol_exp=sol_exp))
 
 sol.comprehensive_plot(sol_exp=sol_exp)
 # sol_exp.plot_tiv()

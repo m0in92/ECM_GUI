@@ -61,10 +61,10 @@ class BaseCyclingStep(metaclass=abc.ABCMeta):
 
 class DischargeStep(BaseCyclingStep):
     """
-    Battery Cycler with the discharge step only
+    Battery Cycler for the discharge step only. This uses the convention that the discharge current is positive.
     """
     def __init__(self, discharge_current: float, V_min: float, SOC_LIB_min: float, SOC_LIB: float) -> None:
-        super().__init__(discharge_current=-discharge_current, V_min=V_min, SOC_LIB_min=SOC_LIB_min,
+        super().__init__(discharge_current=discharge_current, V_min=V_min, SOC_LIB_min=SOC_LIB_min,
                          SOC_LIB=SOC_LIB)
         self.num_cycle = 1
         self.cycle_step_name = 'discharge'
@@ -73,10 +73,10 @@ class DischargeStep(BaseCyclingStep):
 
 class ChargeStep(BaseCyclingStep):
     """
-    Battery Cycler with the charge cycling step only
+    Battery Cycler with the charge cycling step only. This uses the convention that the charge current is negative.
     """
     def __init__(self, charge_current: float, V_max: float, SOC_LIB_max: float, SOC_LIB: float) -> None:
-        super().__init__(charge_current=charge_current, V_max=V_max, SOC_LIB=SOC_LIB, SOC_LIB_max=SOC_LIB_max)
+        super().__init__(charge_current=-charge_current, V_max=V_max, SOC_LIB=SOC_LIB, SOC_LIB_max=SOC_LIB_max)
         self.num_cycle = 1
         self.cycle_step_name = 'charge'
         self.SOC_LIB_init = SOC_LIB

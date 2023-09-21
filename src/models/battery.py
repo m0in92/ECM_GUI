@@ -57,7 +57,8 @@ class Thevenin1RC:
     @classmethod
     def soc_next(cls, dt: float, i_app: float, SOC_prev: float, Q: float, eta: float):
         """
-        This methods calculates the SOC at the next time-step
+        Calculates the SOC at the next time-step. This function uses the convention that the discharge current is
+        positive and the charge current is negative.
         :param dt: time difference between the current and previous time steps [s]
         :param i_app: Applied current [A]
         :param SOC_prev: SOC at the previous time step

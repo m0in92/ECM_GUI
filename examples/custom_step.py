@@ -15,7 +15,7 @@ import src
 sol_exp = src.Solution().read_from_csv_file(filepath='A1-A123-Dynamics.csv')
 
 # simulation parameters are below
-soc_init = 0.38775
+soc_init = 0.0
 V_min = 2
 V_max = 4
 SOC_LIB = soc_init
