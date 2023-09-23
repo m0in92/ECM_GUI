@@ -3,7 +3,7 @@ Package-header for the models namespace.
 Provides classes and functionality for models pertaining to the ECM simulations
 """
 
-__all__ = ['battery']
+__all__ = ['battery', 'thermal']
 
 __author__ = 'Moin Ahmed'
 __copyright__ = 'Copyright 2023 by Moin Ahmed. All rights reserved.'

@@ -7,8 +7,8 @@ import unittest
 from src import ParameterSet, BatteryCell
 
 
-R0 = 0.02
-R1 = 0.05
+R0_ref = 0.02
+R1_ref = 0.05
 C1 = 0.003
 Q = 1.65
 

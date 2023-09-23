@@ -8,9 +8,10 @@ __author__ = 'Moin Ahmed'
 __copyright__ = 'Copyright 2023 by Moin Ahmed. All rights reserved.'
 __status__ = 'development'
 
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
+import numpy.typing as npt
 
 from src.core.battery_objects import BatteryCell
 from src.core.cycling_steps import BaseCyclingStep, CustomStep
@@ -35,7 +36,7 @@ class DTSolver:
     Where k represents the time-point and delta_t represents the time-step between z[k+1] and z[k].
     """
 
-    def __init__(self, battery_cell: BatteryCell) -> None:
+    def __init__(self, battery_cell: BatteryCell, isothermal: bool = True) -> None:
         """
         The class constructor for the solver object.
         :params ECM_obj: (Thevenin1RC) ECM model object
@@ -48,6 +49,11 @@ class DTSolver:
             raise TypeError("battery_cell_instance needs to be a BatteryCell type.")
         self.b_cell = battery_cell
         self.__dt = 0.0  # delta_t is required for SPKF solver.
+
+        if isinstance(isothermal, bool):
+            self.isothermal = isothermal
+        else:
+            raise TypeError('isothermal needs to be a bool type.')
 
     def __calc_v(self, dt: float, i_app: float, i_r1_prev: float) -> tuple[float, float]:
         i_r1_prev = Thevenin1RC.i_R1_next(dt=dt, i_app=i_app, i_R1_prev=i_r1_prev,
@@ -133,14 +139,13 @@ class DTSolver:
         else:
             return self.__solve_standard_cycling_steps(cycling_step=cycling_step, dt=dt)
 
-    def __func_f(self, x_k, u_k, w_k):
+    def __func_f(self, x_k: npt.ArrayLike, u_k: Union[float, npt.ArrayLike], w_k: npt.ArrayLike):
         """
         State Equation.
-        :param x_k:
-        :param u_k:
-        :param w_k:
-        :param delta_t:
-        :return:
+        :param x_k: the vector containing the system state.
+        :param u_k: the input (applied current in case of isothermal condition) variable
+        :param w_k: the vector representing the process noise.
+        :return: the vector representing the state
         """
         R1 = self.b_cell.param.R1
         C1 = self.b_cell.param.C1
@@ -149,20 +154,19 @@ class DTSolver:
         m2 = np.array([[-self.__dt / (3600 * Q)], [1 - np.exp(-self.__dt / (R1 * C1))]])
         return m1 @ x_k + m2 * (u_k + w_k)
 
-    def __func_h(self, x_k, u_k, v_k):
+    def __func_h(self, x_k: npt.ArrayLike, u_k: Union[float, npt.ArrayLike], v_k: npt.ArrayLike):
         """
         Output Equation.
-        :param x_k:
-        :param u_k:
-        :param v_k:
-        :return:
+        :param x_k: the system state vector.
+        :param u_k: the vector (or float in case of a single input) containing the system input
+        :param v_k: the vector representing the sensor noise
+        :return: the system output vector
         """
         return self.b_cell.param.func_SOC_OCV(x_k[0, :]) - self.b_cell.param.R1 * x_k[1, :] - \
                self.b_cell.param.R0 * u_k + v_k
 
     def solveSPKF(self, sol_exp: Solution, cov_soc: float, cov_current: float, cov_process: float, cov_sensor: float,
-                  V_min, V_max, SOC_LIB_min, SOC_LIB_max, SOC_LIB,
-                  dt: Optional[float] = None) -> Solution:
+                  V_min, V_max, SOC_LIB_min, SOC_LIB_max, SOC_LIB) -> Solution:
         """
         Performs the Thevenin equivalent circuit model using the sigma point kalman filter
         :param sol_exp: Solution object from the experimental data.
@@ -175,8 +179,6 @@ class DTSolver:
         :param SOC_LIB_min: minimum LIB SOC
         :param SOC_LIB_max: maximum LIB SOC
         :param SOC_LIB: LIB SOC
-        :param dt: time difference between calculation time step. If set to None, then the time difference
-        from the experimental is used for each time step.
         :return: (Solution) Solution object containing the results from the simulations.
         """
         sol = Solution()  # initialize the solution object
@@ -210,8 +212,7 @@ class DTSolver:
         i = 1
         while not step_completed:
             t_curr = cycling_step.array_t[i]
-            if dt is None:
-                self.__dt = t_curr - t_prev
+            self.__dt = t_curr - t_prev
             i_app_prev = cycling_step.array_I[i-1]
             i_app_curr = cycling_step.array_I[i]
 
@@ -239,3 +240,13 @@ class DTSolver:
             i += 1
 
         return sol
+
+    def solveHybridSPKF(self, dt: float):
+        """
+        Simulates using sigma-point kalman filter if the simulation time coincides with the experimentatl time, else it
+        simulates using the regular Thevenin model.
+        :param dt: time difference between calculation time step. If set to None, then the time difference
+        from the experimental is used for each time step.
+        :return:
+        """
+        pass
